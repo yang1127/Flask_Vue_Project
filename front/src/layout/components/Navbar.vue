@@ -22,7 +22,7 @@
           <i class="el-icon-arrow-down el-icon-user-solid" />
         </span>
         <el-dropdown-menu slot="dropdown" class="dropdown-menu">
-          <el-dropdown-item disabled> 工号: {{ list.workcode }}</el-dropdown-item>
+          <el-dropdown-item disabled> 工号: {{ list.workcode ? list.workcode : '--' }}</el-dropdown-item>
           <a @click="logout">
             <el-dropdown-item divided> 退出登录 </el-dropdown-item>
           </a>

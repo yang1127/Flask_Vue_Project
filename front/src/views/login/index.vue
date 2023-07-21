@@ -71,6 +71,9 @@
           <el-form-item label="password" prop="password">
             <el-input v-model="formRegisterInfo.password" placeholder="请输入用户密码" />
           </el-form-item>
+          <el-form-item label="workcode" prop="workcode">
+            <el-input v-model="formRegisterInfo.workcode" placeholder="请输入用户工号" />
+          </el-form-item>
         </el-form>
         <div style="display: flex; justify-content: flex-end;">
           <el-button @click="cancelRegisterInfo()">取 消</el-button>
@@ -103,11 +106,13 @@ export default {
       dialogRegisterInfo: false,
       formRegisterInfo: {
         username: '',
-        password: ''
+        password: '',
+        workcode: ''
       },
       rulesRegisterInfo: {
         username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-        password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+        workcode: [{ required: true, message: '请输入工号', trigger: 'blur' }]
       }
 
     }
@@ -165,13 +170,14 @@ export default {
         if (valid) {
           const res = await register({
             username: this.formRegisterInfo.username,
-            password: this.formRegisterInfo.password
+            password: this.formRegisterInfo.password,
+            workcode: this.formRegisterInfo.workcode
           })
 
           // 判断是否注册成功
           if (res.success === true) {
             this.$message({
-              message: '注册成功,请登录～',
+              message: '注册成功, 请登录～',
               type: 'success'
             })
           } else {
@@ -233,7 +239,6 @@ $cursor: #fff;
         -webkit-text-fill-color: $cursor !important;
       }
     }
-
   }
 
   .el-form-item {
