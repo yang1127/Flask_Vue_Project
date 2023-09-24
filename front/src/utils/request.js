@@ -1,47 +1,32 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
 import store from '@/store'
-import { getToken } from '@/utils/auth'
+import {
+  getToken,
+  getRefreshToken,
+  setToken
+} from '@/utils/auth'
+import { getNewAccessToken } from '@/api/user'
+import router from '@/router'
 
-// create an axios instance
 const service = axios.create({
-  baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-  // withCredentials: true, // send cookies when cross-domain requests
-  timeout: 5000 // request timeout
+  baseURL: process.env.VUE_APP_BASE_API,
+  timeout: 5000
 })
 
-// request interceptor
 service.interceptors.request.use(
   config => {
-    // do something before request is sent
-
     if (store.getters.token) {
-      // let each request carry token
-      // ['X-Token'] is a custom headers key
-      // please modify it according to the actual situation
       config.headers['X-Token'] = getToken()
     }
     return config
   },
   error => {
-    // do something with request error
-    console.log(error) // for debug
+    console.log(error)
     return Promise.reject(error)
   }
 )
-
-// response interceptor
 service.interceptors.response.use(
-  /**
-   * If you want to get http information such as headers or status
-   * Please return  response => response
-  */
-
-  /**
-   * Determine the request status by custom code
-   * Here is just an example
-   * You can also judge the status by HTTP Status Code
-   */
   response => {
     const res = response.data
 
@@ -57,15 +42,48 @@ service.interceptors.response.use(
       return res
     }
   },
-  error => {
-    console.log('err' + error)
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000
-    })
+  async error => {
+    const originalRequest = error.config
+    if (error.response.status === 401) {
+      const refreshToken = getRefreshToken()
+      if (refreshToken !== null && !originalRequest._retry) {
+        // 添加标志位，避免进入循环
+        originalRequest._retry = true
+        const expirationTime = localStorage.getItem('refreshTokenExpiration')
+        const currentTime = new Date().getTime()
+        if (expirationTime && currentTime > expirationTime) {
+          // refreshToken已过期，执行退出操作
+          logout()
+        } else {
+          try {
+            // 请求getNewAccessToken接口，获取新的accessToken
+            const res = await getNewAccessToken(refreshToken)
+            if (res.data.tokenType === 'new_access') {
+              const newToken = res.data.accessToken
+              // 将新的accessToken置换老的accessToken
+              setToken(newToken)
+              // 更新原始请求的Authorization头部
+              originalRequest.headers.Authorization = newToken
+              // 重新发送原始请求
+              return service(originalRequest)
+            }
+          } catch (error) {
+            logout()
+          }
+        }
+      } else {
+        logout()
+      }
+    }
     return Promise.reject(error)
   }
 )
+
+function logout() {
+  localStorage.clear()
+  router.push({
+    path: '/login'
+  })
+}
 
 export default service

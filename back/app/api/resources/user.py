@@ -1,6 +1,5 @@
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required
-from werkzeug.security import check_password_hash
 
 from ..models.user import UserModel
 from ..common.utils import res

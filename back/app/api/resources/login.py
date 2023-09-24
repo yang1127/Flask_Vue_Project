@@ -23,7 +23,7 @@ class Login(Resource):
                 # 安全地检查给定的存储密码哈希值，该哈希值是之前使用
                 valid = check_password_hash(pwd, f"{salt}{data['pwd']}")
                 if valid:  # 校验通过
-                    # 生成 token 
+                    # 生成 token
                     response_data = generate_token(username)
                     return res(response_data)
                 else:
@@ -41,8 +41,9 @@ class Login(Resource):
         current_username = get_jwt_identity()
         # 再生成新的 token
         access_token = create_access_token(identity=current_username)
-        return res(data={'accessToken': 'Bearer ' + access_token})
-
+        return res(data={
+            'tokenType': 'new_access',
+            'accessToken': 'Bearer ' + access_token})
 
 # 生成token
 def generate_token(uid):
